@@ -20,8 +20,59 @@
   }
   h1 {
     font-size: 24px;
-    margin: 0 0 16px 0;
+    margin: 0;
     color: #14324f;
+  }
+  .app-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: relative;
+    margin-bottom: 16px;
+  }
+  .icon-btn {
+    background: #ffffff;
+    color: #38455a;
+    border: 1px solid #dde3ea;
+    border-radius: 8px;
+    width: 40px;
+    height: 40px;
+    padding: 0;
+    font-size: 19px;
+    line-height: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+  }
+  .icon-btn:hover {
+    background: #eef2f6;
+  }
+  .settings-menu {
+    position: absolute;
+    top: 48px;
+    right: 0;
+    background: #ffffff;
+    border: 1px solid #dde3ea;
+    border-radius: 8px;
+    box-shadow: 0 4px 14px rgba(20, 50, 79, 0.16);
+    padding: 6px;
+    min-width: 190px;
+    z-index: 20;
+  }
+  .settings-menu button {
+    display: block;
+    width: 100%;
+    text-align: left;
+    background: none;
+    color: #1f2733;
+    font-weight: 500;
+    font-size: 14px;
+    padding: 10px 10px;
+    border-radius: 6px;
+  }
+  .settings-menu button:hover {
+    background: #eef2f6;
   }
   .card {
     background: #ffffff;
@@ -66,16 +117,29 @@
     letter-spacing: 0.03em;
   }
   input {
+    -webkit-appearance: none;
+    appearance: none;
     padding: 9px 10px;
     border: 1px solid #cbd4dd;
     border-radius: 6px;
-    font-size: 14px;
+    background: #ffffff;
+    color: #1f2733;
+    font-family: inherit;
+    font-size: 16px;
+    line-height: 1.3;
     width: 100%;
+    min-height: 40px;
   }
   input:focus {
     outline: none;
     border-color: #2f6fa8;
     box-shadow: 0 0 0 3px rgba(47, 111, 168, 0.15);
+  }
+  /* iOS/Safari render date inputs with their own chrome; force the same
+     box height/background/border as text inputs so the row lines up. */
+  input[type="date"] {
+    background: #ffffff;
+    color: #1f2733;
   }
   button {
     background: #2f6fa8;
@@ -150,11 +214,155 @@
     color: #8493a3;
     padding: 20px 0;
   }
+
+  /* Responsive date text: full yyyy-MM-dd on desktop, short YY-MM-DD on
+     mobile. Both are always in the DOM; CSS picks which one shows. */
+  .date-short { display: none; }
+  .date-full { display: inline; }
+
+  /* Mobile layout: stack the form into one column instead of wrapping
+     two uneven fields per row, and give the button full width. */
+  @media (max-width: 640px) {
+    body {
+      padding: 16px 10px 48px 10px;
+    }
+    h1 {
+      font-size: 20px;
+      margin-bottom: 12px;
+    }
+    .card {
+      padding: 12px;
+    }
+    .add-form {
+      flex-direction: column;
+      align-items: stretch;
+      gap: 14px;
+    }
+    .add-form .field {
+      flex: 1 1 auto;
+      min-width: 0;
+      width: 100%;
+    }
+    .add-form button {
+      width: 100%;
+      padding: 12px 16px;
+    }
+    .summary {
+      gap: 12px;
+    }
+    .summary .stat {
+      flex: 1 1 45%;
+    }
+
+    /* Day / Total Cost / Total Gallons / Total Miles are hidden by
+       default on small screens; the Verbose Logs setting brings them
+       back (see body.verbose-logs override below). */
+    .col-extra {
+      display: none;
+    }
+    body.verbose-logs .col-extra {
+      display: table-cell;
+    }
+
+    .date-full { display: none; }
+    .date-short { display: inline; }
+  }
+
+  /* Dark mode: toggled via the settings menu, applied as a class on
+     <body> so it overrides every rule above it in the cascade. */
+  body.dark-mode {
+    background: #12181f;
+    color: #dbe4ee;
+  }
+  body.dark-mode h1 {
+    color: #eef2f6;
+  }
+  body.dark-mode .card {
+    background: #1b232d;
+    border-color: #2b3541;
+    box-shadow: none;
+  }
+  body.dark-mode label {
+    color: #93a3b5;
+  }
+  body.dark-mode input {
+    background: #12181f;
+    border-color: #33404d;
+    color: #eef2f6;
+  }
+  body.dark-mode input:focus {
+    border-color: #4d8fc4;
+    box-shadow: 0 0 0 3px rgba(77, 143, 196, 0.25);
+  }
+  body.dark-mode .icon-btn {
+    background: #1b232d;
+    border-color: #33404d;
+    color: #dbe4ee;
+  }
+  body.dark-mode .icon-btn:hover {
+    background: #232d38;
+  }
+  body.dark-mode .settings-menu {
+    background: #1b232d;
+    border-color: #33404d;
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.45);
+  }
+  body.dark-mode .settings-menu button {
+    color: #dbe4ee;
+  }
+  body.dark-mode .settings-menu button:hover {
+    background: #232d38;
+  }
+  body.dark-mode button.secondary {
+    background: #2b3541;
+    color: #dbe4ee;
+  }
+  body.dark-mode button.secondary:hover {
+    background: #33404d;
+  }
+  body.dark-mode table {
+    background: #1b232d;
+  }
+  body.dark-mode thead th {
+    background: #232d38;
+    color: #b7c3d1;
+    border-bottom-color: #33404d;
+  }
+  body.dark-mode tbody td {
+    border-bottom-color: #2b3541;
+  }
+  body.dark-mode tbody tr:hover {
+    background: #202a34;
+  }
+  body.dark-mode .summary .stat .label {
+    color: #93a3b5;
+  }
+  body.dark-mode .summary .stat .value {
+    color: #eef2f6;
+  }
+  body.dark-mode #errorBox {
+    background: #3a1f1c;
+    border-color: #6e332b;
+    color: #f2a89e;
+  }
+  body.dark-mode #loadingBox {
+    color: #93a3b5;
+  }
+  body.dark-mode .empty-note {
+    color: #6f7f90;
+  }
 </style>
 </head>
 <body>
   <div class="container">
-    <h1>Gas Tracker</h1>
+    <div class="app-header">
+      <h1>Gas Tracker</h1>
+      <button type="button" id="settingsBtn" class="icon-btn" aria-label="Settings" aria-haspopup="true" aria-expanded="false">&#9881;</button>
+      <div id="settingsMenu" class="settings-menu" style="display:none;">
+        <button type="button" id="darkModeBtn">Dark Mode</button>
+        <button type="button" id="verboseLogsBtn">Verbose Logs</button>
+      </div>
+    </div>
 
     <div id="errorBox" style="display:none;"></div>
     <div id="loadingBox" style="display:none;">Loading&hellip;</div>
@@ -192,13 +400,13 @@
         <thead>
           <tr>
             <th>Date</th>
-            <th>Day</th>
+            <th class="col-extra">Day</th>
             <th>Cost</th>
             <th>Gallons</th>
             <th>Miles</th>
-            <th>Total Cost</th>
-            <th>Total Gallons</th>
-            <th>Total Miles</th>
+            <th class="col-extra">Total Cost</th>
+            <th class="col-extra">Total Gallons</th>
+            <th class="col-extra">Total Miles</th>
             <th>Actions</th>
           </tr>
         </thead>
@@ -210,8 +418,76 @@
 <script>
   var state = { entries: [], editingRow: null };
 
+  var SETTINGS_KEY = 'gasTrackerSettings';
+  var settings = loadSettings();
+
+  function loadSettings() {
+    var defaults = { darkMode: false, verboseLogs: false };
+    try {
+      var raw = window.localStorage.getItem(SETTINGS_KEY);
+      if (!raw) return defaults;
+      var parsed = JSON.parse(raw);
+      return {
+        darkMode: !!parsed.darkMode,
+        verboseLogs: !!parsed.verboseLogs
+      };
+    } catch (e) {
+      return defaults;
+    }
+  }
+
+  function saveSettings() {
+    try {
+      window.localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings));
+    } catch (e) {
+      // Storage unavailable (e.g. private browsing) - the setting still
+      // applies for this session, it just won't persist next visit.
+    }
+  }
+
+  function applySettings() {
+    document.body.classList.toggle('dark-mode', settings.darkMode);
+    document.body.classList.toggle('verbose-logs', settings.verboseLogs);
+    var darkBtn = document.getElementById('darkModeBtn');
+    if (darkBtn) darkBtn.textContent = settings.darkMode ? 'Light Mode' : 'Dark Mode';
+    var verboseBtn = document.getElementById('verboseLogsBtn');
+    if (verboseBtn) verboseBtn.textContent = settings.verboseLogs ? 'Verbose Logs (On)' : 'Verbose Logs (Off)';
+  }
+
+  function setSettingsMenuOpen(nextOpen) {
+    var menu = document.getElementById('settingsMenu');
+    var btn = document.getElementById('settingsBtn');
+    menu.style.display = nextOpen ? 'block' : 'none';
+    btn.setAttribute('aria-expanded', nextOpen ? 'true' : 'false');
+  }
+
   document.addEventListener('DOMContentLoaded', function () {
     document.getElementById('addForm').addEventListener('submit', onAddSubmit);
+
+    document.getElementById('settingsBtn').addEventListener('click', function (evt) {
+      evt.stopPropagation();
+      var menu = document.getElementById('settingsMenu');
+      setSettingsMenuOpen(menu.style.display === 'none');
+    });
+    document.getElementById('darkModeBtn').addEventListener('click', function () {
+      settings.darkMode = !settings.darkMode;
+      saveSettings();
+      applySettings();
+    });
+    document.getElementById('verboseLogsBtn').addEventListener('click', function () {
+      settings.verboseLogs = !settings.verboseLogs;
+      saveSettings();
+      applySettings();
+    });
+    document.addEventListener('click', function (evt) {
+      var menu = document.getElementById('settingsMenu');
+      var btn = document.getElementById('settingsBtn');
+      if (menu.style.display !== 'none' && !menu.contains(evt.target) && evt.target !== btn) {
+        setSettingsMenuOpen(false);
+      }
+    });
+
+    applySettings();
     loadEntries();
   });
 
@@ -246,6 +522,12 @@
   function fmtNum(n, decimals) {
     var v = Number(n) || 0;
     return v.toFixed(decimals == null ? 2 : decimals);
+  }
+  // yyyy-MM-dd -> YY-MM-DD, used for the compact mobile date display.
+  function shortDate(dateStr) {
+    var parts = String(dateStr).split('-');
+    if (parts.length !== 3) return dateStr;
+    return parts[0].slice(2) + '-' + parts[1] + '-' + parts[2];
   }
 
   function loadEntries() {
@@ -313,14 +595,14 @@
 
   function displayRowHtml(e) {
     return '<tr>' +
-      '<td>' + escapeHtml(e.date) + '</td>' +
-      '<td>' + escapeHtml(e.day) + '</td>' +
+      '<td><span class="date-full">' + escapeHtml(e.date) + '</span><span class="date-short">' + escapeHtml(shortDate(e.date)) + '</span></td>' +
+      '<td class="col-extra">' + escapeHtml(e.day) + '</td>' +
       '<td>' + escapeHtml(fmtMoney(e.cost)) + '</td>' +
       '<td>' + escapeHtml(fmtNum(e.gallons, 3)) + '</td>' +
       '<td>' + escapeHtml(fmtNum(e.miles, 1)) + '</td>' +
-      '<td>' + escapeHtml(fmtMoney(e.totalCost)) + '</td>' +
-      '<td>' + escapeHtml(fmtNum(e.totalGallons, 3)) + '</td>' +
-      '<td>' + escapeHtml(fmtNum(e.totalMiles, 1)) + '</td>' +
+      '<td class="col-extra">' + escapeHtml(fmtMoney(e.totalCost)) + '</td>' +
+      '<td class="col-extra">' + escapeHtml(fmtNum(e.totalGallons, 3)) + '</td>' +
+      '<td class="col-extra">' + escapeHtml(fmtNum(e.totalMiles, 1)) + '</td>' +
       '<td class="row-actions">' +
         '<button type="button" class="secondary" onclick="startEdit(' + e.row + ')">Edit</button>' +
         '<button type="button" class="danger" onclick="onDelete(' + e.row + ')">Delete</button>' +
@@ -331,13 +613,13 @@
   function editRowHtml(e) {
     return '<tr>' +
       '<td><input type="date" id="edDate_' + e.row + '" value="' + escapeHtml(e.date) + '"></td>' +
-      '<td>' + escapeHtml(e.day) + '</td>' +
+      '<td class="col-extra">' + escapeHtml(e.day) + '</td>' +
       '<td><input type="number" step="0.01" min="0" id="edCost_' + e.row + '" value="' + escapeHtml(fmtNum(e.cost, 2)) + '"></td>' +
       '<td><input type="number" step="0.001" min="0" id="edGallons_' + e.row + '" value="' + escapeHtml(fmtNum(e.gallons, 3)) + '"></td>' +
       '<td><input type="number" step="0.1" min="0" id="edMiles_' + e.row + '" value="' + escapeHtml(fmtNum(e.miles, 1)) + '"></td>' +
-      '<td>' + escapeHtml(fmtMoney(e.totalCost)) + '</td>' +
-      '<td>' + escapeHtml(fmtNum(e.totalGallons, 3)) + '</td>' +
-      '<td>' + escapeHtml(fmtNum(e.totalMiles, 1)) + '</td>' +
+      '<td class="col-extra">' + escapeHtml(fmtMoney(e.totalCost)) + '</td>' +
+      '<td class="col-extra">' + escapeHtml(fmtNum(e.totalGallons, 3)) + '</td>' +
+      '<td class="col-extra">' + escapeHtml(fmtNum(e.totalMiles, 1)) + '</td>' +
       '<td class="row-actions">' +
         '<button type="button" onclick="saveEdit(' + e.row + ')">Save</button>' +
         '<button type="button" class="secondary" onclick="cancelEdit()">Cancel</button>' +

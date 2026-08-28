@@ -1,0 +1,441 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+<base target="_top">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Gas Tracker</title>
+<style>
+  * { box-sizing: border-box; }
+  body {
+    font-family: -apple-system, "Segoe UI", Helvetica, Arial, sans-serif;
+    background: #f4f6f8;
+    color: #1f2733;
+    margin: 0;
+    padding: 24px 12px 60px 12px;
+  }
+  .container {
+    max-width: 900px;
+    margin: 0 auto;
+  }
+  h1 {
+    font-size: 24px;
+    margin: 0 0 16px 0;
+    color: #14324f;
+  }
+  .card {
+    background: #ffffff;
+    border: 1px solid #dde3ea;
+    border-radius: 10px;
+    padding: 16px;
+    margin-bottom: 16px;
+    box-shadow: 0 1px 2px rgba(20, 50, 79, 0.06);
+  }
+  #errorBox {
+    background: #fdeceb;
+    border: 1px solid #f2b6ae;
+    color: #9c2b20;
+    border-radius: 8px;
+    padding: 10px 12px;
+    margin-bottom: 16px;
+    font-size: 14px;
+  }
+  #loadingBox {
+    color: #5c6b7a;
+    font-size: 14px;
+    margin-bottom: 16px;
+  }
+  .add-form {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    align-items: flex-end;
+  }
+  .field {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    min-width: 120px;
+    flex: 1 1 120px;
+  }
+  label {
+    font-size: 12px;
+    font-weight: 600;
+    color: #5c6b7a;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+  }
+  input {
+    padding: 9px 10px;
+    border: 1px solid #cbd4dd;
+    border-radius: 6px;
+    font-size: 14px;
+    width: 100%;
+  }
+  input:focus {
+    outline: none;
+    border-color: #2f6fa8;
+    box-shadow: 0 0 0 3px rgba(47, 111, 168, 0.15);
+  }
+  button {
+    background: #2f6fa8;
+    color: #ffffff;
+    border: none;
+    border-radius: 6px;
+    padding: 10px 16px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+  }
+  button:hover { background: #255a89; }
+  button:disabled { background: #9db4c8; cursor: not-allowed; }
+  button.secondary {
+    background: #e7ecf1;
+    color: #1f2733;
+  }
+  button.secondary:hover { background: #d9e1e8; }
+  button.danger {
+    background: #c94a3d;
+  }
+  button.danger:hover { background: #ab3c31; }
+  .row-actions button { margin-right: 6px; padding: 6px 10px; font-size: 13px; }
+  .summary {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 16px;
+  }
+  .summary .stat {
+    flex: 1 1 140px;
+  }
+  .summary .stat .label {
+    font-size: 12px;
+    color: #5c6b7a;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+  }
+  .summary .stat .value {
+    font-size: 20px;
+    font-weight: 700;
+    color: #14324f;
+  }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 14px;
+    background: #ffffff;
+  }
+  thead th {
+    text-align: left;
+    background: #eef2f6;
+    color: #38455a;
+    padding: 10px 8px;
+    border-bottom: 2px solid #dde3ea;
+    white-space: nowrap;
+  }
+  tbody td {
+    padding: 8px;
+    border-bottom: 1px solid #eef1f4;
+    vertical-align: middle;
+  }
+  tbody tr:hover { background: #fafcfe; }
+  tbody input {
+    padding: 6px 8px;
+    font-size: 13px;
+  }
+  .table-wrap {
+    overflow-x: auto;
+  }
+  .empty-note {
+    text-align: center;
+    color: #8493a3;
+    padding: 20px 0;
+  }
+</style>
+</head>
+<body>
+  <div class="container">
+    <h1>Gas Tracker</h1>
+
+    <div id="errorBox" style="display:none;"></div>
+    <div id="loadingBox" style="display:none;">Loading&hellip;</div>
+
+    <div class="card">
+      <form id="addForm" class="add-form">
+        <div class="field">
+          <label for="fDate">Date</label>
+          <input type="date" id="fDate" required>
+        </div>
+        <div class="field">
+          <label for="fCost">Cost ($)</label>
+          <input type="number" id="fCost" step="0.01" min="0" placeholder="0.00" required>
+        </div>
+        <div class="field">
+          <label for="fGallons">Gallons</label>
+          <input type="number" id="fGallons" step="0.001" min="0" placeholder="0.000" required>
+        </div>
+        <div class="field">
+          <label for="fMiles">Odometer Miles</label>
+          <input type="number" id="fMiles" step="0.1" min="0" placeholder="0.0" required>
+        </div>
+        <div class="field" style="flex: 0 0 auto;">
+          <button type="submit" id="addBtn">Add Entry</button>
+        </div>
+      </form>
+    </div>
+
+    <div class="card">
+      <div class="summary" id="summaryBox"></div>
+    </div>
+
+    <div class="card table-wrap">
+      <table id="entriesTable">
+        <thead>
+          <tr>
+            <th>Date</th>
+            <th>Day</th>
+            <th>Cost</th>
+            <th>Gallons</th>
+            <th>Miles</th>
+            <th>Total Cost</th>
+            <th>Total Gallons</th>
+            <th>Total Miles</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody id="entriesBody"></tbody>
+      </table>
+    </div>
+  </div>
+
+<script>
+  var state = { entries: [], editingRow: null };
+
+  document.addEventListener('DOMContentLoaded', function () {
+    document.getElementById('addForm').addEventListener('submit', onAddSubmit);
+    loadEntries();
+  });
+
+  function showError(msg) {
+    var el = document.getElementById('errorBox');
+    el.textContent = msg;
+    el.style.display = 'block';
+  }
+  function hideError() {
+    document.getElementById('errorBox').style.display = 'none';
+  }
+  function setLoading(isLoading) {
+    document.getElementById('loadingBox').style.display = isLoading ? 'block' : 'none';
+  }
+  function setFormDisabled(isDisabled) {
+    document.getElementById('addBtn').disabled = isDisabled;
+  }
+
+  function escapeHtml(str) {
+    return String(str)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#39;');
+  }
+
+  function fmtMoney(n) {
+    var v = Number(n) || 0;
+    return '$' + v.toFixed(2);
+  }
+  function fmtNum(n, decimals) {
+    var v = Number(n) || 0;
+    return v.toFixed(decimals == null ? 2 : decimals);
+  }
+
+  function loadEntries() {
+    setLoading(true);
+    hideError();
+    google.script.run
+      .withSuccessHandler(function (data) {
+        state.entries = data || [];
+        state.editingRow = null;
+        renderAll();
+        setLoading(false);
+      })
+      .withFailureHandler(function (err) {
+        setLoading(false);
+        showError('Could not load entries: ' + (err && err.message ? err.message : err));
+      })
+      .getAllEntries();
+  }
+
+  function renderAll() {
+    renderSummary();
+    renderTable();
+  }
+
+  function renderSummary() {
+    var box = document.getElementById('summaryBox');
+    if (!state.entries.length) {
+      box.innerHTML = '<div class="stat"><div class="label">Entries</div><div class="value">0</div></div>';
+      return;
+    }
+    var last = state.entries[state.entries.length - 1];
+    var avgPricePerGallon = last.totalGallons > 0 ? (last.totalCost / last.totalGallons) : 0;
+    var avgMpg = last.totalGallons > 0 ? (last.totalMiles / last.totalGallons) : 0;
+    box.innerHTML =
+      statHtml('Entries', String(state.entries.length)) +
+      statHtml('Total Cost', fmtMoney(last.totalCost)) +
+      statHtml('Total Gallons', fmtNum(last.totalGallons, 3)) +
+      statHtml('Total Miles', fmtNum(last.totalMiles, 1)) +
+      statHtml('Avg $/Gallon', fmtMoney(avgPricePerGallon)) +
+      statHtml('Avg MPG', fmtNum(avgMpg, 1));
+  }
+
+  function statHtml(label, value) {
+    return '<div class="stat"><div class="label">' + escapeHtml(label) + '</div>' +
+      '<div class="value">' + escapeHtml(value) + '</div></div>';
+  }
+
+  function renderTable() {
+    var tbody = document.getElementById('entriesBody');
+    if (!state.entries.length) {
+      tbody.innerHTML = '<tr><td colspan="9" class="empty-note">No entries yet &mdash; add your first fill-up above.</td></tr>';
+      return;
+    }
+    var html = '';
+    for (var i = 0; i < state.entries.length; i++) {
+      var e = state.entries[i];
+      if (state.editingRow === e.row) {
+        html += editRowHtml(e);
+      } else {
+        html += displayRowHtml(e);
+      }
+    }
+    tbody.innerHTML = html;
+  }
+
+  function displayRowHtml(e) {
+    return '<tr>' +
+      '<td>' + escapeHtml(e.date) + '</td>' +
+      '<td>' + escapeHtml(e.day) + '</td>' +
+      '<td>' + escapeHtml(fmtMoney(e.cost)) + '</td>' +
+      '<td>' + escapeHtml(fmtNum(e.gallons, 3)) + '</td>' +
+      '<td>' + escapeHtml(fmtNum(e.miles, 1)) + '</td>' +
+      '<td>' + escapeHtml(fmtMoney(e.totalCost)) + '</td>' +
+      '<td>' + escapeHtml(fmtNum(e.totalGallons, 3)) + '</td>' +
+      '<td>' + escapeHtml(fmtNum(e.totalMiles, 1)) + '</td>' +
+      '<td class="row-actions">' +
+        '<button type="button" class="secondary" onclick="startEdit(' + e.row + ')">Edit</button>' +
+        '<button type="button" class="danger" onclick="onDelete(' + e.row + ')">Delete</button>' +
+      '</td>' +
+    '</tr>';
+  }
+
+  function editRowHtml(e) {
+    return '<tr>' +
+      '<td><input type="date" id="edDate_' + e.row + '" value="' + escapeHtml(e.date) + '"></td>' +
+      '<td>' + escapeHtml(e.day) + '</td>' +
+      '<td><input type="number" step="0.01" min="0" id="edCost_' + e.row + '" value="' + escapeHtml(fmtNum(e.cost, 2)) + '"></td>' +
+      '<td><input type="number" step="0.001" min="0" id="edGallons_' + e.row + '" value="' + escapeHtml(fmtNum(e.gallons, 3)) + '"></td>' +
+      '<td><input type="number" step="0.1" min="0" id="edMiles_' + e.row + '" value="' + escapeHtml(fmtNum(e.miles, 1)) + '"></td>' +
+      '<td>' + escapeHtml(fmtMoney(e.totalCost)) + '</td>' +
+      '<td>' + escapeHtml(fmtNum(e.totalGallons, 3)) + '</td>' +
+      '<td>' + escapeHtml(fmtNum(e.totalMiles, 1)) + '</td>' +
+      '<td class="row-actions">' +
+        '<button type="button" onclick="saveEdit(' + e.row + ')">Save</button>' +
+        '<button type="button" class="secondary" onclick="cancelEdit()">Cancel</button>' +
+      '</td>' +
+    '</tr>';
+  }
+
+  function startEdit(row) {
+    state.editingRow = row;
+    renderTable();
+  }
+
+  function cancelEdit() {
+    state.editingRow = null;
+    renderTable();
+  }
+
+  function saveEdit(row) {
+    var date = document.getElementById('edDate_' + row).value;
+    var cost = document.getElementById('edCost_' + row).value;
+    var gallons = document.getElementById('edGallons_' + row).value;
+    var miles = document.getElementById('edMiles_' + row).value;
+
+    if (!date || cost === '' || gallons === '' || miles === '') {
+      showError('Please fill in every field before saving.');
+      return;
+    }
+
+    hideError();
+    setLoading(true);
+    google.script.run
+      .withSuccessHandler(function (data) {
+        state.entries = data || [];
+        state.editingRow = null;
+        renderAll();
+        setLoading(false);
+      })
+      .withFailureHandler(function (err) {
+        setLoading(false);
+        showError('Could not save changes: ' + (err && err.message ? err.message : err));
+      })
+      .updateEntry(row, { date: date, cost: cost, gallons: gallons, miles: miles });
+  }
+
+  function onDelete(row) {
+    if (!window.confirm('Delete this entry? This cannot be undone.')) {
+      return;
+    }
+    hideError();
+    setLoading(true);
+    google.script.run
+      .withSuccessHandler(function (data) {
+        state.entries = data || [];
+        state.editingRow = null;
+        renderAll();
+        setLoading(false);
+      })
+      .withFailureHandler(function (err) {
+        setLoading(false);
+        showError('Could not delete entry: ' + (err && err.message ? err.message : err));
+      })
+      .deleteEntry(row);
+  }
+
+  function onAddSubmit(evt) {
+    evt.preventDefault();
+    hideError();
+
+    var date = document.getElementById('fDate').value;
+    var cost = document.getElementById('fCost').value;
+    var gallons = document.getElementById('fGallons').value;
+    var miles = document.getElementById('fMiles').value;
+
+    if (!date || cost === '' || gallons === '' || miles === '') {
+      showError('Please fill in every field.');
+      return;
+    }
+
+    setFormDisabled(true);
+    setLoading(true);
+    google.script.run
+      .withSuccessHandler(function (data) {
+        state.entries = data || [];
+        state.editingRow = null;
+        renderAll();
+        setLoading(false);
+        setFormDisabled(false);
+        document.getElementById('addForm').reset();
+        document.getElementById('fDate').focus();
+      })
+      .withFailureHandler(function (err) {
+        setLoading(false);
+        setFormDisabled(false);
+        showError('Could not add entry: ' + (err && err.message ? err.message : err));
+      })
+      .addEntry({ date: date, cost: cost, gallons: gallons, miles: miles });
+  }
+</script>
+</body>
+</html>
+
